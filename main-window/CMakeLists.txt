@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 
 set(EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/bin")
 
-find_package(Qt6 COMPONENTS Core Widgets Quick REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets Quick QuickControls2 REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0>=1.4)
@@ -47,7 +47,7 @@ ${CMAKE_CURRENT_SOURCE_DIR}/src
 ${CMAKE_CURRENT_SOURCE_DIR}/lib/include)
 
 target_link_libraries(${PROJECT_NAME}
-Qt6::Core Qt6::Widgets Qt6::Quick
+Qt6::Core Qt6::Widgets Qt6::Quick Qt6::QuickControls2
 ${OpenCV_LIBS}
 PkgConfig::GSTREAMER PkgConfig::GSTREAMER_APP
 gst_receiver gst_sender)

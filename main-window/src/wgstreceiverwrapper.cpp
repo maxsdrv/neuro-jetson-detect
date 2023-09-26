@@ -1,3 +1,4 @@
+#include <QDebug>
 #include "wgstreceiverwrapper.h"
 
 WGstReceiverWrapper::WGstReceiverWrapper(size_t port, QObject* parent) : QObject{parent},
@@ -8,5 +9,5 @@ WGstReceiverWrapper::WGstReceiverWrapper(size_t port, QObject* parent) : QObject
 
 void WGstReceiverWrapper::startReceiving()
 {
-
+    qDebug() << __func__;
 }

@@ -1,3 +1,5 @@
+#include <QDebug>
+
 #include "wgstsenderwrapper.h"
 
 WGstSenderWrapper::WGstSenderWrapper(const QString& ip,
@@ -12,5 +14,5 @@ WGstSenderWrapper::WGstSenderWrapper(const QString& ip,
 
 void WGstSenderWrapper::startSending()
 {
-
+    qDebug() << __func__;
 }
