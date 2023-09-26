@@ -2,12 +2,14 @@
 
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
+#include <jetson-utils/videoSource.h>
+#include <jetson-utils/videoOutput.h>
 
 #include <vector>
 #include <string>
 #include <memory>
 
-class WGstSender {
+class JRtpSender {
 public:
 	enum class STREAM_QUALITY {
 		LOW = 1,
@@ -16,8 +18,8 @@ public:
 		JPEG_HIGH = 70
 	};
 
-	WGstSender(const std::string& ip_, size_t port_, STREAM_QUALITY quality_);
-	~WGstSender();
+	JRtpSender(const std::string& ip_, size_t port_, STREAM_QUALITY quality_);
+	~JRtpSender();
 
 	void send(const std::vector<unsigned char>& frame);
 	[[nodiscard]] bool stable_start(); 

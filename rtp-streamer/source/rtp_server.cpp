@@ -1,35 +1,34 @@
 #include <iostream>
 
-#include "gst_sender.h"
+#include "rtp_server.h"
 
 
-struct CustomSenderData {
-		GstElement* pipeline = nullptr;
-		GstElement* appsrc = nullptr;
-		GstElement* depay = nullptr;
-		GstElement* convert = nullptr;
-		GstElement* encoder = nullptr;
-		GstElement* videoscale = nullptr;
-		GstElement* videorate = nullptr;
-		GstElement* capsfilter = nullptr;
-		GstElement* sink = nullptr;
-
-		std::pair<int, int> current_size{0, 0};
-		int current_fps{ 0 };
+struct CustomOptions final : public videoOptions {
+	URI resource{ "csi://0" };
+	DeviceType device_type{ DeviceType::DEVICE_CSI };
+	IoType io_type{ IoType::INPUT };
+	Codec video_codec{ Codec::CODEC_H264 };
+	int width{ 1280 };
+	int height{ 720 };
+	int frame_rate{ 30 };
+	int num_buff{ 4 };
+	bool zero_copy{ true };
+	FlipMethod flip_method{ FlipMethod::FLIP_HORIZONTAL };
 };
 
-struct CustomSenderDataDeleter {
-	void operator()(CustomSenderData* data) {
-		if (data->pipeline) gst_object_unref(data->pipeline);
-	}
+struct CustomOptionsDeleter {
+
 };
 
-class WGstSender::Impl {
+
+class JRtpSender::Impl {
 public:
 	Impl(const std::string& ip_, size_t port_, STREAM_QUALITY quality_);
 	~Impl() = default;
 
-	std::unique_ptr<CustomSenderData, CustomSenderDataDeleter> s_launcher;
+	videoSource* input;
+	videoSource* output;
+	CustomOptions m_options;
 	STREAM_QUALITY current_quality;
 	size_t port;
 	std::string ip_addr;
@@ -42,131 +41,33 @@ public:
 	void stop();
 };
 
-inline constexpr int base_camera_width = 640;
-inline constexpr int base_camera_height = 480;
-inline constexpr int auxiliary_camera_width = 320;
-inline constexpr int auxiliary_camera_height = 240;
-inline constexpr int high_fps = 20;
-inline constexpr int low_fps = 2;
 
-WGstSender::Impl::Impl(const std::string& ip_, size_t port_, STREAM_QUALITY quality_) : 
-												  s_launcher(new CustomSenderData()), 
+JRtpSender::Impl::Impl(const std::string& ip_, size_t port_, STREAM_QUALITY quality_) : 
 												  current_quality(quality_),
-												  ip_addr(ip_),  port(port_),
-												  bad_flow(GST_FLOW_EOS),
-												  codec_format{"I420"}
+												  ip_addr(ip_),  port(port_)
 {
-	gst_init(nullptr, nullptr);
-
-	s_launcher->appsrc = gst_element_factory_make("appsrc", "source");
-	s_launcher->depay = gst_element_factory_make("rtpjpegpay", "pay");
-	s_launcher->convert = gst_element_factory_make("videoconvert", "convert");
-	s_launcher->encoder = gst_element_factory_make("jpegenc", "encoder");
-	s_launcher->videoscale = gst_element_factory_make("videoscale", "scale");
-	s_launcher->videorate = gst_element_factory_make("videorate", "rate");
-	s_launcher->capsfilter = gst_element_factory_make("capsfilter", "customfilter");
-	s_launcher->sink = gst_element_factory_make("udpsink", "sink");
-
-	s_launcher->pipeline = gst_pipeline_new("veda-sender-pipeline");
-
-	try {
-		if (!s_launcher->pipeline ||
-			!s_launcher->appsrc ||
-			!s_launcher->depay ||
-			!s_launcher->convert ||
-			!s_launcher->encoder ||
-			!s_launcher->videoscale ||
-			!s_launcher->videorate ||
-			!s_launcher->capsfilter ||
-			!s_launcher->sink 
-			)
-		{
-			g_printerr("Not all elements could be created.\n");
-			throw std::runtime_error("Failed creating pipeline.");  
-		}
-	}
-	catch (std::exception& ex) {
-		std::cerr << ex.what();
-		stop();
-	}
+	
 }
 
-WGstSender::WGstSender(const std::string& ip_, size_t port_, STREAM_QUALITY quality_) : 
+JRtpSender::JRtpSender(const std::string& ip_, size_t port_, STREAM_QUALITY quality_) : 
 									sender(std::make_unique<Impl>(ip_, port_, quality_))
 {
 	
 }
 
-void WGstSender::Impl::set_stable_properties()
+void JRtpSender::Impl::set_stable_properties()
 {
-	if (current_quality == STREAM_QUALITY::HIGH) {
-		s_launcher->current_size = { base_camera_width, base_camera_height };
-		s_launcher->current_fps = high_fps;
-	}
-	else {
-		s_launcher->current_size = { auxiliary_camera_width, auxiliary_camera_height };
-		s_launcher->current_fps = low_fps;
-	}
+	
 
-	gst_bin_add_many(GST_BIN(s_launcher->pipeline), 
-								s_launcher->appsrc,
-								s_launcher->convert,
-								s_launcher->videorate,
-								s_launcher->videoscale,
-								s_launcher->capsfilter,
-								s_launcher->encoder,
-								s_launcher->depay,
-								s_launcher->sink, 
-								nullptr);
-
-	if (!gst_element_link_many(s_launcher->appsrc,
-							s_launcher->convert,
-							s_launcher->videorate,
-							s_launcher->videoscale,
-							s_launcher->capsfilter,
-							s_launcher->encoder,
-							s_launcher->depay,
-							s_launcher->sink, nullptr)) 
-	{
-		throw std::runtime_error("Failed link elements");
-	}
-
-
-	g_object_set(G_OBJECT(s_launcher->appsrc), "format", GST_FORMAT_TIME, nullptr);
-	g_object_set(G_OBJECT(s_launcher->appsrc), "is-live", TRUE, nullptr);
-	g_object_set(G_OBJECT(s_launcher->appsrc), "do-timestamp", TRUE, nullptr);
-
-	g_object_set(s_launcher->sink, "host", ip_addr.c_str() , "port", port, nullptr); 
-	if (!G_IS_OBJECT(s_launcher->sink)) {
-		g_printerr("Failed set udpsink. \n");
-	}
-
-	GstCaps* initial_caps = gst_caps_new_simple("video/x-raw",  
-		"format", G_TYPE_STRING, codec_format.c_str(),
-		"width", G_TYPE_INT, s_launcher->current_size.first,
-		"height", G_TYPE_INT, s_launcher->current_size.second,
-		"framerate", GST_TYPE_FRACTION, s_launcher->current_fps, 1,
-		 nullptr);
-
-	if (!initial_caps) {
-		g_printerr("Failed to create initial caps.\n");
-		throw std::runtime_error("Error creating initial caps.");
-	}
-
-	gst_app_src_set_caps(GST_APP_SRC(s_launcher->appsrc), initial_caps);
-	gst_caps_unref(initial_caps); 
 }
 
 
-WGstSender::~WGstSender()
+JRtpSender::~JRtpSender()
 {
-	if (sender->s_launcher && sender->s_launcher->pipeline) {
-		gst_element_set_state(sender->s_launcher->pipeline, GST_STATE_NULL);
-	}
-	std::cout << __func__ << std::endl;
+
 }
 
-void WGstSender::Impl::set_quality(STREAM_QUALITY quality_)
+void JRtpSender::Impl::set_quality(STREAM_QUALITY quality_)
 {
 	int quality{0};
 	
@@ -176,11 +77,12 @@ void WGstSender::Impl::set_quality(STREAM_QUALITY quality_)
 	else
 		quality = static_cast<int>(STREAM_QUALITY::JPEG_HIGH);
 
-	g_object_set(G_OBJECT(s_launcher->encoder), "quality", quality, nullptr);
+	//g_object_set(G_OBJECT(s_launcher->encoder), "quality", quality, nullptr);
 }
 
-void WGstSender::set_framerate(const int new_fps)
+void JRtpSender::set_framerate(const int new_fps)
 {
+	/*
 	gst_element_set_state(sender->s_launcher->pipeline, GST_STATE_PAUSED);
 
 	sender->s_launcher->current_fps = new_fps;
@@ -193,10 +95,12 @@ void WGstSender::set_framerate(const int new_fps)
 	gst_caps_unref(frame_caps);
 
 	gst_element_set_state(sender->s_launcher->pipeline, GST_STATE_PLAYING);
+	*/
 }
 
-void WGstSender::Impl::set_scale(const std::pair<int, int>& _size)
+void JRtpSender::Impl::set_scale(const std::pair<int, int>& _size)
 {
+	/*
 	gst_element_set_state(s_launcher->pipeline, GST_STATE_PAUSED);
 
 	s_launcher->current_size = _size;
@@ -211,9 +115,10 @@ void WGstSender::Impl::set_scale(const std::pair<int, int>& _size)
 	gst_caps_unref(scale_caps);
 	
 	gst_element_set_state(s_launcher->pipeline, GST_STATE_PLAYING);
+	*/
 }
 
-void WGstSender::send(const std::vector<unsigned char>& frame)
+void JRtpSender::send(const std::vector<unsigned char>& frame)
 {
 	GstBuffer* buffer;
 	GstMapInfo map;
@@ -236,7 +141,7 @@ void WGstSender::send(const std::vector<unsigned char>& frame)
 		return;
 	}
 		
-	ret = gst_app_src_push_buffer(GST_APP_SRC(sender->s_launcher->appsrc), buffer);
+	//ret = gst_app_src_push_buffer(GST_APP_SRC(sender->s_launcher->appsrc), buffer);
 
 	if (ret != GST_FLOW_OK) {
 		g_printerr("Error pushing buffer to appsrc. \n");
@@ -244,12 +149,13 @@ void WGstSender::send(const std::vector<unsigned char>& frame)
 	
 }
 
-void WGstSender::stop()
+void JRtpSender::stop()
 {
 	sender->stop();
 }
 
-void WGstSender::Impl::stop() {
+void JRtpSender::Impl::stop() {
+	/*
 	if (s_launcher->pipeline) {
 		GstStateChangeReturn ret_state = gst_element_set_state(s_launcher->pipeline, GST_STATE_NULL);
 		if (ret_state == GST_STATE_CHANGE_FAILURE) {
@@ -262,9 +168,10 @@ void WGstSender::Impl::stop() {
 			}
 		}
 	}
+	*/
 }
 
-bool WGstSender::stable_start()
+bool JRtpSender::stable_start()
 {
 	if (sender->bad_flow == GST_FLOW_OK) {
 		return false;
@@ -281,7 +188,7 @@ bool WGstSender::stable_start()
 
 	sender->set_quality(sender->current_quality);
 
-	gst_element_set_state(sender->s_launcher->pipeline, GST_STATE_PLAYING);
+	//gst_element_set_state(sender->s_launcher->pipeline, GST_STATE_PLAYING);
 
 	return true;
 }

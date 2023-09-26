@@ -7,17 +7,17 @@ set(CMAKE_CUDA_ARCHITECTURES 70)
 
 find_package(OpenCV REQUIRED)
 find_package(CUDAToolkit REQUIRED)
-find_package(CUDA 7.0 REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_search_module(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0>=1.4)
 pkg_search_module(GSTREAMER_APP REQUIRED IMPORTED_TARGET gstreamer-app-1.0>=1.4)
 
 set(JETSON_INCLUDE_DIRS "/usr/local/include/jetson-utils")
 
-set(SOURCES "source/rtp_client_server.h"
-			"source/rtp_server.cpp"
+set(SOURCES 
+			source/rtp_server.h
+			source/rtp_server.cpp
 			source/main.cpp
-			)
+)
 
 # Add source to this project's executable.
 add_executable (${PROJECT_NAME} ${SOURCES})
@@ -29,6 +29,7 @@ target_link_libraries(${PROJECT_NAME}
 				PkgConfig::GSTREAMER PkgConfig::GSTREAMER_APP
 				PRIVATE 
 				CUDA::cudart
+				CUDA::cuda_driver
 				${OpenCV_LIBS}
 				jetson-utils
 )
