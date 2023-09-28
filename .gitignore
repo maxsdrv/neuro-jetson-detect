@@ -1,2 +1,4 @@
 rtp-streamer/out/
 rtp-streamer/.vs/
+rtp-streamer/src/.vscode
+rtp-streamer/src/build
