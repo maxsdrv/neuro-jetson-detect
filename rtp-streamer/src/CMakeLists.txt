@@ -24,13 +24,15 @@ set(JETSON_INCLUDE_DIRS "/usr/local/include/jetson-utils")
 set(SOURCES 
 			source/rtp_server.h
 			source/rtp_server.cpp
-			source/test.cuh
-			source/test.cu
 			source/main.cpp
+)
+set(CUDA_SOURCE 
+	cuda_source/test.cuh
+	cuda_source/test.cu
 )
 
 # Add source to this project's executable.
-add_executable (${PROJECT_NAME} ${SOURCES})
+add_executable (${PROJECT_NAME} ${SOURCES} ${CUDA_SOURCE})
 
 
 # TODO: Add tests and install targets if needed.
@@ -48,6 +50,7 @@ target_include_directories(${PROJECT_NAME}
 							PUBLIC
 							${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 							${CMAKE_CURRENT_SOURCE_DIR}/source
+							${CMAKE_CURRENT_SOURCE_DIR}/cuda_source
 							PRIVATE
 							${OPENCV_INCLUDE_DIRS}
 							${JETSON_INCLUDE_DIRS}

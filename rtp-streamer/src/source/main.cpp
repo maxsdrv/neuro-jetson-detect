@@ -7,7 +7,7 @@
 int main(int argc, char* argv[]) {
 	cuInit(0); // Initialize CUDA
 
-	/*
+	
 	Wrapper::wrapper();
 
 	const int N = 5;
@@ -20,10 +20,6 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < N; ++i) {
 		std::cout << C[i] << " ";
 	}
-
-
-	return 0;
-	*/
 
 	std::string pipeline{ "rtp://192.168.191.97:5000" };
 
