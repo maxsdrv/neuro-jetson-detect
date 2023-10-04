@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 		std::cout << C[i] << " ";
 	}
 
-	std::string pipeline{ "rtp://192.168.191.97:5000" };
+	std::string pipeline{ "rtp://192.168.19?.??:????" };
 
 	videoOptions custom_input_options;
 	videoOptions custom_output_options;
@@ -47,8 +47,8 @@ int main(int argc, char* argv[]) {
 	}
 
 	custom_output_options.resource.protocol = "rtp";
-	custom_output_options.resource.location = "192.168.1.133";
-	custom_output_options.resource.port = 5000;
+	custom_output_options.resource.location = "192.168.?.???";
+	custom_output_options.resource.port = 0000;
 	custom_output_options.deviceType = videoOptions::DeviceType::DEVICE_IP;
 	custom_output_options.ioType = videoOptions::IoType::OUTPUT;
 	custom_output_options.codec = videoOptions::Codec::CODEC_H264;
