@@ -22,6 +22,7 @@ target_link_libraries(${TARGET_NAME}
         PkgConfig::Pistache
         sender
         receiver
+        nlohmann_json::nlohmann_json
 )
 
 

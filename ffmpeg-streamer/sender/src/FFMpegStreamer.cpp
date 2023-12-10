@@ -79,10 +79,6 @@ bool FFMpegStreamer::sendFrame(const std::vector<unsigned char>& frame) {
     std::copy(frame.begin() + Y_plane_size, frame.begin() + Y_plane_size + UV_plane_size, _avFrame->data[1]);
     std::copy(frame.begin() + Y_plane_size + UV_plane_size, frame.end(), _avFrame->data[2]);
 
-    _avFrame->pts = _frame_count * av_rescale_q(_frame_count, (AVRational){1, _frame_rate},
-                                                _video_stream->getCodecContext()->time_base);
-    ++_frame_count;
-
     if (int ret = avcodec_send_frame(_video_stream->getCodecContext(), _avFrame.get()); ret < 0) {
         std::cerr << "Failed avcodec_send_frame.\n";
         return false;
@@ -96,7 +92,11 @@ bool FFMpegStreamer::sendFrame(const std::vector<unsigned char>& frame) {
         return false;
     }
 
-    _video_stream->getPacket()->pts = _video_stream->getPacket()->dts = _avFrame->pts;
+    //_video_stream->getPacket()->pts = _video_stream->getPacket()->dts = _avFrame->pts;
+    _avFrame->pts = _frame_count * av_rescale_q(_frame_count, (AVRational){1, _frame_rate},
+                                                _video_stream->getCodecContext()->time_base);
+    ++_frame_count;
+
     ret = av_interleaved_write_frame(_base_fmt_ctx.get(), _video_stream->getPacket());
 
     if (ret < 0) {

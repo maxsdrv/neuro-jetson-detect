@@ -1,3 +1,4 @@
+#include <nlohmann/json.hpp>
 
 #include "RTPServer.hpp"
 
@@ -28,7 +29,11 @@ void RTPServer::setupRoutes() {
 }
 
 void RTPServer::handleHeartBeat(const Rest::Request &request, Http::ResponseWriter response) {
-    response.send(Http::Code::Ok, "Server is alive");
+    nlohmann::json j;
+    j["message"] = "Start Jetson Nano Server";
+
+    response.send(Http::Code::Ok, j.dump(), MIME(Application, Json));
+    //response.send(Http::Code::Ok, "Server is alive");
 }
 
 /*void RTPServer::start(const std::string &addr) {

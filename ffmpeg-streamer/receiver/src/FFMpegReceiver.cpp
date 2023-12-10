@@ -8,7 +8,7 @@ FFMpegReceiver::FFMpegReceiver(std::string sdp_path) :
     _codec_context{nullptr},
     _options{nullptr},
     _sdp_path{std::move(sdp_path)},
-    _buffer_h264(buffer_h264_size),
+//    _buffer_h264(buffer_h264_size),
     _avFrame{makeAV<AVFrame>()},
     _packet{makeAV<AVPacket>()} {
 
@@ -67,7 +67,7 @@ bool FFMpegReceiver::openStream(const std::string& sdp_path) {
 }
 
 std::optional<std::vector<unsigned char>> FFMpegReceiver::receiveAndDecodeFrame() {
-    _buffer_h264.clear();
+    /*_buffer_h264.clear();
 
     while (av_read_frame(_format_context, _packet.get()) >= 0) {
         if (_packet->stream_index == _format_context->streams[0]->index) {
@@ -94,7 +94,43 @@ std::optional<std::vector<unsigned char>> FFMpegReceiver::receiveAndDecodeFrame(
     }
 
     av_packet_unref(_packet.get());
-    return {};
+    return {};*/
+
+    if (av_read_frame(_format_context, _packet.get()) < 0) {
+        av_packet_unref(_packet.get());
+        return {};
+    }
+
+    if (_packet->stream_index != _format_context->streams[0]->index) {
+        av_packet_unref(_packet.get());
+        return {};
+    }
+
+    if (avcodec_send_packet(_codec_context, _packet.get()) != 0) {
+        std::cerr << "Failed avcodec_send_packet.\n";
+        av_packet_unref(_packet.get());
+        return {};
+    }
+
+    if (avcodec_receive_frame(_codec_context, _avFrame.get()) != 0) {
+        av_packet_unref(_packet.get());
+        return {};
+    }
+
+    int Y_plane_size = _avFrame->linesize[0] * _codec_context->height;
+    int U_plane_size = _avFrame->linesize[1] * (_codec_context->height / 2);
+    int V_plane_size = _avFrame->linesize[2] * (_codec_context->height / 2);
+
+    size_t total_size = Y_plane_size + U_plane_size + V_plane_size;
+    _buffer_h264.resize(total_size);
+
+    memcpy(_buffer_h264.data(), _avFrame->data[0], Y_plane_size);
+    memcpy(_buffer_h264.data() + Y_plane_size, _avFrame->data[1], U_plane_size);
+    memcpy(_buffer_h264.data() + Y_plane_size + U_plane_size, _avFrame->data[2], V_plane_size);
+
+    av_packet_unref(_packet.get());
+
+    return _buffer_h264;
 }
 
 FFMpegReceiver::~FFMpegReceiver() {
