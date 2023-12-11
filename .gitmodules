@@ -1,0 +1,3 @@
+[submodule "ffmpeg-streamer/lib/json"]
+	path = ffmpeg-streamer/lib/json
+	url = https://github.com/nlohmann/json.git
