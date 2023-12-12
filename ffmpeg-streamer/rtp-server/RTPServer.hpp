@@ -19,11 +19,12 @@ public:
 private:
     void  setupRoutes();
     void handleHeartBeat(const Rest::Request& request, Http::ResponseWriter response);
+    void play(const Rest::Request& request, Http::ResponseWriter response);
+    void stop(const Rest::Request& request, Http::ResponseWriter response);
 
 private:
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     Rest::Router router;
-
 };
 
 
