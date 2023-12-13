@@ -9,6 +9,9 @@
 
 class FFmpegAdapter : public IStreamer {
 public:
+    bool initializeH264() override;
+    bool sendFrame(const std::vector<unsigned char>& frame) override;
+    [[nodiscard]] std::pair<int, int> frameSize() const override;
 
 private:
 

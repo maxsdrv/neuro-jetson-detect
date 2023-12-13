@@ -6,9 +6,9 @@
 class IStreamer {
 public:
     virtual ~IStreamer() = default;
-    virtual bool initialize() = 0;
+    virtual bool initializeH264() = 0;
     virtual bool sendFrame(const std::vector<unsigned char>& frame) = 0;
-    virtual std::pair<int, int> frameSize() const = 0;
+    [[nodiscard]] virtual std::pair<int, int> frameSize() const = 0;
 };
 
 
