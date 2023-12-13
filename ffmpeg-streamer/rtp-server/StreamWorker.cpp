@@ -40,14 +40,16 @@ void StreamWorker::testCaptureStream(std::stop_token stopToken) {
 }
 
 
-void StreamWorker::closeCaptureStream() {
+template<typename TStreamer>
+void StreamWorker<TStreamer>::closeCaptureStream() {
     if (_captureThread.joinable()) {
         _captureThread.request_stop();
         _captureThread.join();
     }
 }
 
-void StreamWorker::runCaptureStream() {
+template<typename TStreamer>
+void StreamWorker<TStreamer>::runCaptureStream() {
     if (!_captureThread.joinable()) {
         _streamer = std::make_unique<FFMpegStreamer>(_rtpAddr, VideoQuality::HIGH);
 
@@ -60,6 +62,8 @@ void StreamWorker::runCaptureStream() {
         _captureThread = std::jthread(&StreamWorker::testCaptureStream, this);
     }
 }
+
+
 
 
 

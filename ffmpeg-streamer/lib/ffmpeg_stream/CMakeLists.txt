@@ -13,7 +13,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # For static and imp
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib) # For shared libraries
 
 # Include sub-projects.
-add_subdirectory ("rtp-server")
-add_subdirectory("lib/json")
-add_subdirectory("lib/gst_stream")
-add_subdirectory("lib/ffmpeg_stream")
+add_subdirectory ("ffmpeg_sender")
+add_subdirectory ("ffmpeg_receiver")
+

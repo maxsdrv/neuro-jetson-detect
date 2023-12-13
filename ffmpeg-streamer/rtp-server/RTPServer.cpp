@@ -44,10 +44,6 @@ void RTPServer::play(const Rest::Request &request, Http::ResponseWriter response
     j["type"] = "play";
     j["data"] = {{"message", "Play video successfully"}};
 
-    std::string rtp_destination {"rtp://localhost:5000"};
-
-    auto ffmpegStream = std::make_unique<StreamWorker>(rtp_destination);
-    ffmpegStream->runCaptureStream();
 
     response.send(Http::Code::Ok, j.dump(), MIME(Application, Json));
 }

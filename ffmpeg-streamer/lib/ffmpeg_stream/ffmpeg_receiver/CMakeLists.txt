@@ -1,5 +1,5 @@
 
-set(TARGET_NAME receiver)
+set(TARGET_NAME ffmpeg_receiver)
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenCV REQUIRED)

@@ -7,8 +7,17 @@
 #include <queue>
 #include <opencv2/opencv.hpp>
 
-#include "FFMpegStreamer.h"
+#ifdef ENABLE_FFMPEG
+#include <FFMpegStreamer.h>
+#endif
 
+#ifdef ENABLE_GSTREAMER
+#include <gst_sender.h>
+#endif
+
+#include "IStreamer.h"
+
+template <typename TStreamer>
 class StreamWorker {
 public:
     explicit StreamWorker(std::string rtpAddr);
@@ -22,7 +31,7 @@ private:
     std::mutex _mutex;
     std::condition_variable _condVar;
     std::queue<std::string> _commandQueue;
-    std::unique_ptr<FFMpegStreamer> _streamer;
+    std::unique_ptr<IStreamer> _streamer;
     std::string _rtpAddr;
     cv::VideoCapture _cap;
 
