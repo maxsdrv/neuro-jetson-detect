@@ -1,3 +1,0 @@
-/home/maxim/my-projects/project-gsn-nsu/video_sender_prototype/libs/elements/cmake-build-debug/CMakeFiles/plugin_payloader.dir
-/home/maxim/my-projects/project-gsn-nsu/video_sender_prototype/libs/elements/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/maxim/my-projects/project-gsn-nsu/video_sender_prototype/libs/elements/cmake-build-debug/CMakeFiles/rebuild_cache.dir
