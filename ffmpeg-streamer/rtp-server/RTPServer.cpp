@@ -5,8 +5,8 @@
 #include "GstreamerAdapter.h"
 
 RTPServer::RTPServer(Address addr) :
-    httpEndpoint{std::make_shared<Http::Endpoint>(addr)} {
-
+    httpEndpoint{std::make_shared<Http::Endpoint>(addr)}
+{
     std::cout << "Server listening on: " << addr.host() << " port: " << addr.port() << std::endl;
 }
 
@@ -23,25 +23,19 @@ void RTPServer::start() {
 }
 
 void RTPServer::setupRoutes() {
-    /*Rest::Routes::Get(router, "/heartbeat", [this](const Rest::Request& request, Http::ResponseWriter response){
-        handleHeartBeat(request, std::move(response));
-        return Rest::Route::Result::Ok;
-    });*/
-    Rest::Routes::Get(router, "/heartbeat", Rest::Routes::bind(&RTPServer::handleHeartBeat, this));
-    Rest::Routes::Get(router, "/play", Rest::Routes::bind(&RTPServer::play, this));
-    Rest::Routes::Get(router, "/stop", Rest::Routes::bind(&RTPServer::stop, this));
+    using namespace Rest;
+
+    //Routes::Get(router, "/heartbeat", Routes::bind(&RTPServer::handleHeartBeat, this));
+    //Routes::Get(router, "/play", Routes::bind(&RTPServer::play, this));
+    Routes::Get(router, "/heartbeat", Routes::bind(&RTPServer::stop, this));
 }
 
 void RTPServer::handleHeartBeat(const Rest::Request &request, Http::ResponseWriter response) {
-    {
-        std::lock_guard<std::mutex> lock(_mtx);
         /*nlohmann::json j;
         j["type"] = "heartbeat";
         j["data"] = {{"message", "Start Jetson Nano Server"}};*/
 
-//    response.send(Http::Code::Ok, j.dump(), MIME(Application, Json));
-        response.send(Http::Code::Ok, "Response is OK.");
-    }
+    response.send(Http::Code::Ok, "OK!");
 }
 
 void RTPServer::play(const Rest::Request &request, Http::ResponseWriter response) {

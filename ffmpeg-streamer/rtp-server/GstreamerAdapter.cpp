@@ -23,3 +23,4 @@ bool GstreamerAdapter::sendFrame(const std::vector<unsigned char> &frame) {
 std::pair<int, int> GstreamerAdapter::frameSize() const {
     return std::pair<int, int>();
 }
+
