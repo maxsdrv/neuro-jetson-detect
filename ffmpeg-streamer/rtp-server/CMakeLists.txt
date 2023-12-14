@@ -20,11 +20,12 @@ set(SOURCE
         RTPServer.hpp
         RTPServer.cpp
         main.cpp
-        StreamWorker.cpp
         StreamWorker.h
         IStreamer.h
         FFmpegAdapter.cpp
         FFmpegAdapter.h
+        GstreamerAdapter.cpp
+        GstreamerAdapter.h
 )
 
 add_executable(${TARGET_NAME} ${SOURCE})

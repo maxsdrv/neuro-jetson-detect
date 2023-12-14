@@ -1,17 +1,17 @@
-#ifndef FFMPEG_STREAMER_RTPSERVER_HPP
-#define FFMPEG_STREAMER_RTPSERVER_HPP
+#ifndef STREAMER_RTPSERVER_HPP
+#define STREAMER_RTPSERVER_HPP
+
+#include <mutex>
 
 #include <pistache/endpoint.h>
 #include <pistache/router.h>
 
 using namespace Pistache;
 
-class RTPServer : public Http::Handler {
+class RTPServer {
 public:
+    RTPServer() = default;
     explicit RTPServer(Address addr);
-
-    HTTP_PROTOTYPE(RTPServer)
-    void onRequest(const Http::Request &request, Http::ResponseWriter writer) override;
 
     void init(size_t thr = 2);
     void start();
@@ -25,7 +25,8 @@ private:
 private:
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     Rest::Router router;
+    std::mutex _mtx;
 };
 
 
-#endif //FFMPEG_STREAMER_RTPSERVER_HPP
+#endif //STREAMER_RTPSERVER_HPP
