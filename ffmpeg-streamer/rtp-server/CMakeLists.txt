@@ -17,8 +17,8 @@ elseif(ENABLE_FFMPEG)
 endif()
 
 set(SOURCE
-        RTPServer.hpp
-        RTPServer.cpp
+        RequestHandler.hpp
+        RequestHandler.cpp
         main.cpp
         StreamWorker.h
         IStreamer.h
@@ -26,6 +26,8 @@ set(SOURCE
         FFmpegAdapter.h
         GstreamerAdapter.cpp
         GstreamerAdapter.h
+        StreamServer.cpp
+        StreamServer.h
 )
 
 add_executable(${TARGET_NAME} ${SOURCE})

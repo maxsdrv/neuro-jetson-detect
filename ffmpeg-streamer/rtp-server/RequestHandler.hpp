@@ -10,23 +10,22 @@
 
 using namespace Pistache;
 
-class RTPServer : public Http::Handler, public std::enable_shared_from_this<RTPServer> {
+class RequestHandler : public Http::Handler {
     using RouterCallback = std::function<void(const Http::Request &request, Http::ResponseWriter *response)>;
 
 public:
-    explicit RTPServer(Address addr);
+    RequestHandler();
+    ~RequestHandler() override;
 
-    HTTP_PROTOTYPE(RTPServer)
+    HTTP_PROTOTYPE(RequestHandler)
     void onRequest(const Http::Request &request, Http::ResponseWriter response) override;
-
-    void init(size_t thr = 2);
-    void start();
+    void onTimeout(const Http::Request &request, Http::ResponseWriter response) override;
 
 private:
     void  setupRoutes();
     void handleHeartBeat(const Http::Request& request, Http::ResponseWriter *response);
-    void play(const Rest::Request& request, Http::ResponseWriter response);
-    void stop(const Rest::Request& request, Http::ResponseWriter response);
+    void play(const Http::Request& request, Http::ResponseWriter *response);
+    void stop(const Http::Request& request, Http::ResponseWriter *response);
 
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     std::unordered_map<std::string, RouterCallback> routerHandler;

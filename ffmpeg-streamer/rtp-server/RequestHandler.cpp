@@ -1,16 +1,18 @@
 #include <nlohmann/json.hpp>
 
-#include "RTPServer.hpp"
+#include "RequestHandler.hpp"
 #include "StreamWorker.h"
 #include "GstreamerAdapter.h"
 
-RTPServer::RTPServer(Address addr) :
-    httpEndpoint{std::make_shared<Http::Endpoint>(addr)}
-{
-    std::cout << "Server listening on: " << addr.host() << " port: " << addr.port() << std::endl;
+RequestHandler::RequestHandler() {
+    setupRoutes();
 }
 
-void RTPServer::onRequest(const Http::Request &request, Http::ResponseWriter response) {
+RequestHandler::~RequestHandler() {
+    std::cout << __func__ << std::endl;
+}
+
+void RequestHandler::onRequest(const Http::Request &request, Http::ResponseWriter response) {
     auto it = routerHandler.find(request.resource());
     if (it != routerHandler.end()) {
         it->second(request, &response);
@@ -19,25 +21,17 @@ void RTPServer::onRequest(const Http::Request &request, Http::ResponseWriter res
     }
 }
 
-void RTPServer::init(size_t thr) {
-    auto opts = Http::Endpoint::options()
-            .threads(static_cast<int>(thr));
-    httpEndpoint->init(opts);
-    setupRoutes();
-}
-
-void RTPServer::start() {
-    httpEndpoint->setHandler(shared_from_this());
-    httpEndpoint->serve();
-}
-
-void RTPServer::setupRoutes() {
+void RequestHandler::setupRoutes() {
     routerHandler["/heartbeat"] = [this](const Http::Request &request, Http::ResponseWriter *response) {
         handleHeartBeat(request, response);
     };
+
+    routerHandler["/play"] = [this](const Http::Request &request, Http::ResponseWriter *response) {
+        play(request, response);
+    };
 }
 
-void RTPServer::handleHeartBeat(const Http::Request &request, Http::ResponseWriter *response) {
+void RequestHandler::handleHeartBeat(const Http::Request &request, Http::ResponseWriter *response) {
     nlohmann::json j;
     j["type"] = "heartbeat";
     j["data"] = {{"message", "Start Jetson Nano Server"}};
@@ -45,7 +39,7 @@ void RTPServer::handleHeartBeat(const Http::Request &request, Http::ResponseWrit
     response->send(Http::Code::Ok, j.dump(), MIME(Application, Json));
 }
 
-void RTPServer::play(const Rest::Request &request, Http::ResponseWriter response) {
+void RequestHandler::play(const Http::Request &request, Http::ResponseWriter *response) {
     nlohmann::json j;
     j["type"] = "play";
     j["data"] = {{"message", "Play video successfully"}};
@@ -57,16 +51,23 @@ void RTPServer::play(const Rest::Request &request, Http::ResponseWriter response
     gstreamerWorker.runCaptureStream();
 #endif
 
-#ifdef ENABLE_FFMPEG
-
-#endif
-
-    response.send(Http::Code::Ok, j.dump(), MIME(Application, Json));
+    response->send(Http::Code::Ok, j.dump(), MIME(Application, Json));
 }
 
-void RTPServer::stop(const Rest::Request &request, Http::ResponseWriter response) {
+void RequestHandler::stop(const Http::Request &request, Http::ResponseWriter *response) {
 
 }
+
+void RequestHandler::onTimeout(const Http::Request &request, Http::ResponseWriter response) {
+    response
+    .send(Http::Code::Request_Timeout, "Timeout")
+    .then([=](ssize_t) {}, PrintException());
+}
+
+
+
+
+
 
 
 
