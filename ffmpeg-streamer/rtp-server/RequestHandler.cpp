@@ -5,6 +5,7 @@
 #include "GstreamerAdapter.h"
 
 RequestHandler::RequestHandler() {
+    std::cout << __func__ << std::endl;
     setupRoutes();
 }
 

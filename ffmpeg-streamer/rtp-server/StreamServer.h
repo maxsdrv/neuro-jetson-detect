@@ -14,12 +14,17 @@ public:
 
     void start();
     void shutdown();
+    void setupSignalHandler();
+    void waitForSignal();
 
 private:
     std::shared_ptr<Http::Endpoint> _endpoint;
     std::unique_ptr<std::jthread> _thread;
+    std::unique_ptr<std::jthread> _signalThread;
     std::chrono::seconds _interval;
     std::atomic<bool> _shutdown;
+
+    void run(std::stop_token stoken);
 };
 
 

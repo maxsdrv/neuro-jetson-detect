@@ -258,7 +258,7 @@ void WGstSender::Impl::set_scale(const std::pair<int, int>& _size)
 	gst_element_set_state(s_launcher->pipeline, GST_STATE_PLAYING);
 }
 
-void WGstSender::send(const std::vector<unsigned char>& frame)
+bool WGstSender::send(const std::vector<unsigned char>& frame)
 {
 	GstMapInfo map;
 
@@ -266,7 +266,7 @@ void WGstSender::send(const std::vector<unsigned char>& frame)
 
 	if (!buffer) {
 		g_printerr("Failed to allocate GstBuffer. \n");
-		return;
+		return false;
 	}
 	
 	if (gst_buffer_map(buffer, &map, GST_MAP_WRITE)) {
@@ -276,14 +276,17 @@ void WGstSender::send(const std::vector<unsigned char>& frame)
 	else {
 		g_printerr("Failed to map GstBuffer. \n");
 		gst_buffer_unref(buffer);
-		return;
+		return false;
 	}
 		
 	GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(sender->s_launcher->appsrc), buffer);
 
 	if (ret != GST_FLOW_OK) {
 		g_printerr("Error pushing buffer to appsrc. \n");
+       return false;
 	}
+
+    return true;
 }
 
 void WGstSender::clean()

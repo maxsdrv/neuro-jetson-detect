@@ -19,7 +19,7 @@ public:
 	WGstSender(const std::string& ip_, size_t port_, STREAM_QUALITY quality_);
 	~WGstSender();
 
-	void send(const std::vector<unsigned char>& frame);
+	[[nodiscard]] bool send(const std::vector<unsigned char>& frame);
 	[[nodiscard]] bool stable_start(); 
 	void set_framerate(const int new_fps); 
 	void set_video_quality(STREAM_QUALITY quality_);
