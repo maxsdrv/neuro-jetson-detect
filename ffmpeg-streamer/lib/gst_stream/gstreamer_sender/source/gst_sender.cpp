@@ -93,6 +93,7 @@ WGstSender::Impl::Impl(const std::string& ip_, size_t port_, STREAM_QUALITY qual
 												  codec_format{"I420"}
 {
 	gst_init(nullptr, nullptr);
+    g_setenv("GST_DEBUG", "*:5", TRUE);
 
 	s_launcher->appsrc = gst_element_factory_make("appsrc", "source");
 	s_launcher->depay = gst_element_factory_make("rtpjpegpay", "pay");

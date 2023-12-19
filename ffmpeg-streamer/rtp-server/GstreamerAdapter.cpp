@@ -13,7 +13,6 @@ GstreamerAdapter::~GstreamerAdapter() {
 }
 
 bool GstreamerAdapter::initializeH264() {
-    g_setenv("GST_DEBUG", "*:5", TRUE);
     if (!_gstreamer->stable_start()) {
         std::cerr << "Error start rtp sender.\n";
         return false;
@@ -34,6 +33,6 @@ bool GstreamerAdapter::sendFrame(const std::vector<unsigned char> &frame) {
 }
 
 std::pair<int, int> GstreamerAdapter::frameSize() const {
-    return std::pair<int, int>();
+    return std::make_pair(640, 480);
 }
 

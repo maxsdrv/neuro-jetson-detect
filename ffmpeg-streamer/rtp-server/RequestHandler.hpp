@@ -8,13 +8,15 @@
 #include <pistache/http.h>
 #include <pistache/router.h>
 
+#include "TaskManager.h"
+
 using namespace Pistache;
 
 class RequestHandler : public Http::Handler {
     using RouterCallback = std::function<void(const Http::Request &request, Http::ResponseWriter *response)>;
-
+    using RequestManager = TaskManager<std::function<void(std::stop_token)>>;
 public:
-    RequestHandler();
+    explicit RequestHandler(RequestManager& thManager);
     ~RequestHandler() override;
 
     HTTP_PROTOTYPE(RequestHandler)
@@ -29,6 +31,7 @@ private:
 
     std::shared_ptr<Http::Endpoint> httpEndpoint;
     std::unordered_map<std::string, RouterCallback> routerHandler;
+    RequestManager &_requestThManager;
 };
 
 

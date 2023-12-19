@@ -2,12 +2,11 @@
 #include <future>
 
 #include "StreamServer.h"
-#include "RequestHandler.hpp"
 
 StreamServer::StreamServer(const std::shared_ptr<Http::Endpoint> &endpoint) :
         _endpoint{endpoint}, _interval{std::chrono::seconds(1)}, _shutdown{false}
 {
-    _endpoint->setHandler(Http::make_handler<RequestHandler>());
+    _endpoint->setHandler(Http::make_handler<RequestHandler>(_threadManager));
 }
 
 StreamServer::~StreamServer() {
@@ -16,31 +15,21 @@ StreamServer::~StreamServer() {
 }
 
 void StreamServer::start() {
-//    _shutdown = false;
-    _thread = std::make_unique<std::jthread>([this](std::stop_token stoken) {
-        run(std::move(stoken));
-    });
-
-    _signalThread = std::make_unique<std::jthread>([this]() {
-        setupSignalHandler();
-        waitForSignal();
-    });
+    _threadManager.addTask([this](std::stop_token stoken) { run(); });
+    _threadManager.addTask([this](std::stop_token stoken) { setupSignalHandler(); waitForSignal(); });
 
     _endpoint->serve();
 }
 
 void StreamServer::shutdown() {
+    _threadManager.shutdown();
     _endpoint->shutdown();
-//    _shutdown = true;
-    /*if (!_shutdown.exchange(true)) {
-        _endpoint->shutdown();
-    }*/
 }
 
-void StreamServer::run(std::stop_token stoken) {
+void StreamServer::run() {
     Tcp::Listener::Load old;
 
-    while (!stoken.stop_requested()) {
+    while (!_threadManager.isShutdownRequested()) {
         if (!_endpoint->isBound()) {
             std::cerr << "Server not bound" << std::endl;
         }

@@ -4,7 +4,7 @@
 #include "StreamWorker.h"
 #include "GstreamerAdapter.h"
 
-RequestHandler::RequestHandler() {
+RequestHandler::RequestHandler(RequestManager &thManager) : _requestThManager{thManager} {
     std::cout << __func__ << std::endl;
     setupRoutes();
 }
@@ -46,10 +46,12 @@ void RequestHandler::play(const Http::Request &request, Http::ResponseWriter *re
     j["data"] = {{"message", "Play video successfully"}};
 
 #ifdef ENABLE_GSTREAMER
-    std::string ipAddr {"10.10.3.206"};
-    unsigned short port {5000};
-    StreamWorker<GstreamerAdapter> gstreamerWorker(ipAddr, port, WGstSender::STREAM_QUALITY::HIGH);
-    gstreamerWorker.runCaptureStream();
+    _requestThManager.addTask([this](std::stop_token stoken) {
+        std::string ipAddr {"10.10.3.206"};
+        unsigned short port {5000};
+        StreamWorker<GstreamerAdapter> gstreamerWorker(ipAddr, port, WGstSender::STREAM_QUALITY::HIGH);
+        gstreamerWorker.runCaptureStream(std::move(stoken));
+    });
 #endif
 
     response->send(Http::Code::Ok, j.dump(), MIME(Application, Json));

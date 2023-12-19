@@ -16,19 +16,17 @@ public:
 
     ~StreamWorker();
 
-    void runCaptureStream();
+    void runCaptureStream(std::stop_token stoken);
     void closeCaptureStream();
 
 private:
-    std::jthread _captureThread;
-    std::mutex _mutex;
-    std::condition_variable _condVar;
-    std::queue<std::string> _commandQueue;
-    std::unique_ptr<TStreamer> _streamer;
-    std::string _rtpAddr;
-    cv::VideoCapture _cap;
-
-    void testCaptureStream();
+    std::jthread _captureThread{};
+    std::mutex _mutex{};
+    std::condition_variable _condVar{};
+    std::queue<std::string> _commandQueue{};
+    std::unique_ptr<TStreamer> _streamer{};
+    std::string _rtpAddr{};
+    cv::VideoCapture _cap{};
 };
 
 /**
@@ -53,12 +51,22 @@ StreamWorker<TStreamer>::~StreamWorker() {
     closeCaptureStream();
 }
 
-template<typename TStreamer>
-void StreamWorker<TStreamer>::testCaptureStream() {
 
+template<typename TStreamer>
+void StreamWorker<TStreamer>::closeCaptureStream() {
+    std::cout << "Stream is closed successfully.\n";
+}
+
+template<typename TStreamer>
+void StreamWorker<TStreamer>::runCaptureStream(std::stop_token stoken) {
+    if (!_streamer->initializeH264()) {
+        std::cerr << "cannot initialize stream with h264 codec.\n";
+        closeCaptureStream();
+        return;
+    }
     auto [width,  height]= _streamer->frameSize();
 
-    while (true) {
+    while (!stoken.stop_requested()) {
         cv::Mat frame;
         cv::Mat yuy_frame;
         _cap >> frame;
@@ -76,29 +84,7 @@ void StreamWorker<TStreamer>::testCaptureStream() {
             break;
         }
     }
-}
-
-
-template<typename TStreamer>
-void StreamWorker<TStreamer>::closeCaptureStream() {
-    if (_captureThread.joinable()) {
-        _captureThread.request_stop();
-        _captureThread.join();
-    }
-}
-
-template<typename TStreamer>
-void StreamWorker<TStreamer>::runCaptureStream() {
-    if (!_captureThread.joinable()) {
-
-        if (!_streamer->initializeH264()) {
-            std::cerr << "cannot initialize stream with h264 codec.\n";
-            closeCaptureStream();
-            return;
-        }
-
-        _captureThread = std::jthread(&StreamWorker::testCaptureStream, this);
-    }
+    closeCaptureStream();
 }
 
 

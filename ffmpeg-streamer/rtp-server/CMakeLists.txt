@@ -28,6 +28,7 @@ set(SOURCE
         GstreamerAdapter.h
         StreamServer.cpp
         StreamServer.h
+        TaskManager.h
 )
 
 add_executable(${TARGET_NAME} ${SOURCE})
